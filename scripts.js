@@ -2,9 +2,11 @@ class Parquimetro {
   constructor() {
     this.tarifas = [
       { valor: 1.0, tempo: 30 }, // 30 minutos por R$1,00
-      { valor: 2.0, tempo: 60 }, // 1 hora por R$2,00
-      { valor: 3.5, tempo: 120 }, // 2 horas por R$3,50
+      { valor: 1.75, tempo: 60 }, // 1 hora por R$1,75
+      { valor: 3.0, tempo: 120 }, // 2 horas por R$3,00 (ajustado de 3.5 para 3.0)
     ];
+    this.tempoMaximo = 120; // Limite máximo de 2 horas
+    this.valorMaximo = 3.0; // Valor máximo aceito para 2 horas
   }
 
   calcularTempoETroco(valorPago) {
@@ -17,18 +19,24 @@ class Parquimetro {
 
     let tempoTotal = 0;
     let valorRestante = valorPago;
+    let troco = 0;
 
-    // Calcula o tempo máximo possível com base nas tarifas
-    for (let i = this.tarifas.length - 1; i >= 0; i--) {
-      const tarifa = this.tarifas[i];
-      while (valorRestante >= tarifa.valor) {
-        tempoTotal += tarifa.tempo;
-        valorRestante -= tarifa.valor;
-        valorRestante = Number(valorRestante.toFixed(2)); // Evita problemas de precisão
+    // Se o valor pago for maior que 3, limita a 120 minutos e calcula troco
+    if (valorPago > this.valorMaximo) {
+      tempoTotal = this.tempoMaximo;
+      troco = Number((valorPago - this.valorMaximo).toFixed(2));
+    } else {
+      // Calcula o tempo com base nas tarifas
+      for (let i = this.tarifas.length - 1; i >= 0; i--) {
+        const tarifa = this.tarifas[i];
+        while (valorRestante >= tarifa.valor) {
+          tempoTotal += tarifa.tempo;
+          valorRestante -= tarifa.valor;
+          valorRestante = Number(valorRestante.toFixed(2));
+        }
       }
+      troco = valorRestante > 0 ? valorRestante : 0;
     }
-
-    const troco = valorRestante > 0 ? valorRestante : 0;
 
     return {
       sucesso: true,
@@ -48,6 +56,10 @@ class Parquimetro {
     }
     if (minutos > 0) {
       resultado += `${minutos}min`;
+    }
+
+    if (tempo >= this.tempoMaximo) {
+      resultado += `<br>Tempo máximo atingido (2 horas)`;
     }
 
     if (troco > 0) {
